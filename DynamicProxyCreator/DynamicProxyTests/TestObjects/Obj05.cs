@@ -1,4 +1,4 @@
-﻿namespace DynamicProxyTests.TestObjects
+﻿namespace com.bodurov.DynamicProxyTests.TestObjects
 {
     public interface IInt05<T1,T2>
     {

@@ -8,8 +8,8 @@
     <ProjectGuid>{1D768BC9-D134-4C69-9021-6325C9CDA258}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DynamicProxy</RootNamespace>
-    <AssemblyName>DynamicProxy</AssemblyName>
+    <RootNamespace>com.bodurov.DynamicProxy</RootNamespace>
+    <AssemblyName>com.bodurov.DynamicProxy</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

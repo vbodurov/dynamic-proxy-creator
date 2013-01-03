@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
 
-namespace DynamicProxy
+namespace com.bodurov.DynamicProxy
 {
     public class ProxyCreator : IProxyCreator
     {
@@ -494,7 +494,7 @@ ab.Save("Temp" + typeName + ".dll");
 
 
 
-            var tb = moduleBuilder.DefineType("RedProxy." + typeName , 
+            var tb = moduleBuilder.DefineType("DynamicProxyTypes." + typeName, 
                                 TypeAttributes.Public |
                                 TypeAttributes.Class |
                                 TypeAttributes.Sealed |

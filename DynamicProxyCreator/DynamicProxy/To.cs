@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DynamicProxy
+namespace com.bodurov.DynamicProxy
 {
     public static class To
     {

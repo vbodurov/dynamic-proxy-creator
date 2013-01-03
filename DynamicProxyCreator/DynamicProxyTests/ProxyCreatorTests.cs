@@ -1,9 +1,9 @@
 ﻿using System;
-using DynamicProxy;
-using DynamicProxyTests.TestObjects;
 using NUnit.Framework;
+using com.bodurov.DynamicProxy;
+using com.bodurov.DynamicProxyTests.TestObjects;
 
-namespace DynamicProxyTests
+namespace com.bodurov.DynamicProxyTests
 {
     [TestFixture]
     public class ProxyCreatorTests
@@ -98,6 +98,22 @@ namespace DynamicProxyTests
             proxy[guid] = guid.ToString();
             Assert.That(proxy[guid], Is.EqualTo(guid.ToString()));
         }
-    }
 
+        [Test]
+        public void CanProxyMethodsWithRefAndOut()
+        {
+            var type = To.ProxyType<Obj07, IInt07>();
+
+            var obj = new Obj07();
+            var proxy = (IInt07)Activator.CreateInstance(type, obj);
+
+            var r = 6;
+            double half;
+            var result = proxy.TryProcess(1, ref r, out half);
+
+            Assert.That(result, Is.True);
+            Assert.That(r, Is.EqualTo(7));
+            Assert.That(half, Is.EqualTo(r / 2.0));
+        }
+    }
 }

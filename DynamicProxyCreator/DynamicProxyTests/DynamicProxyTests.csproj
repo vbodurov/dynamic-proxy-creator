@@ -8,8 +8,8 @@
     <ProjectGuid>{C6FFE5A3-2388-4C95-9622-105F973F4969}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DynamicProxyTests</RootNamespace>
-    <AssemblyName>DynamicProxyTests</AssemblyName>
+    <RootNamespace>com.bodurov.DynamicProxyTests</RootNamespace>
+    <AssemblyName>com.bodurov.DynamicProxyTests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -53,6 +53,7 @@
     <Compile Include="TestObjects\Obj04.cs" />
     <Compile Include="TestObjects\Obj05.cs" />
     <Compile Include="TestObjects\Obj06.cs" />
+    <Compile Include="TestObjects\Obj07.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

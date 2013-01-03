@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DynamicProxyTests.TestObjects
+namespace com.bodurov.DynamicProxyTests.TestObjects
 {
     public interface IInt01
     {
