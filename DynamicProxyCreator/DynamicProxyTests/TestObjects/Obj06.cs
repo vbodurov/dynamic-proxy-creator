@@ -25,7 +25,7 @@
             set { _t = t; }
         }
     }
-
+    // used to find out how it is wired on IL level
     public sealed class Obj06Proxy<T> : IInt06<T>
     {
         private readonly Obj06<T> _source;

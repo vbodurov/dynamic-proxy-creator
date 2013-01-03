@@ -54,6 +54,7 @@
     <Compile Include="TestObjects\Obj05.cs" />
     <Compile Include="TestObjects\Obj06.cs" />
     <Compile Include="TestObjects\Obj07.cs" />
+    <Compile Include="TestObjects\Obj08.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -15,7 +15,7 @@ namespace com.bodurov.DynamicProxyTests.TestObjects
             return default(T1);
         }
     }
-
+    // used to find out how it is wired on IL level
     public class Obj02Proxy<T1, T2> : IInt02<T1, T2> where T2 : class
     {
         private readonly Obj02<T1, T2> _source;

@@ -115,5 +115,39 @@ namespace com.bodurov.DynamicProxyTests
             Assert.That(r, Is.EqualTo(7));
             Assert.That(half, Is.EqualTo(r / 2.0));
         }
+
+        [Test]
+        public void CanProxyEvents()
+        {
+            var type = To.ProxyType<Obj08, IInt08>();
+
+            var obj = new Obj08();
+            var proxy = (IInt08)Activator.CreateInstance(type, obj);
+
+            var test = 0;
+
+            EventHandler<EventArgs> func = (o, e) => ++test;
+
+            proxy.DoSomething += func;
+
+            proxy.Invoke();
+            proxy.Invoke();
+
+            Assert.That(test, Is.EqualTo(2));
+
+            proxy.DoSomething -= func;
+
+            proxy.Invoke();
+            proxy.Invoke();
+            proxy.Invoke();
+
+            Assert.That(test, Is.EqualTo(2));
+        }
+
+//        [Test]
+//        public void CanProxyEventWithGenericArguments()
+//        {
+//
+//        }
     }
 }

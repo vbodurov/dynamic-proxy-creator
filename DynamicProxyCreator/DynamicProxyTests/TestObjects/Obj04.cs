@@ -38,7 +38,7 @@
         } 
     }
 
-
+    // used to find out how it is wired on IL level
     public class Obj04Proxy : IInt04
     {
         private readonly Obj04 _source;

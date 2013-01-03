@@ -86,7 +86,7 @@ namespace com.bodurov.DynamicProxy
 
             CreateProperties(interfaceType, sourceType, tb, fieldBuilder, gtpb);
 
-
+            CreateEvents(interfaceType, sourceType, tb, fieldBuilder, gtpb);
             
 
             var type = tb.CreateType();
@@ -102,6 +102,88 @@ ab.Save("Temp" + typeName + ".dll");
             _cacheByInterfaceType[interfaceType][sourceType] = type;
 
             return type;
+        }
+
+        private void CreateEvents(Type interfaceType, Type sourceType, TypeBuilder tb, FieldBuilder fieldBuilder, GenericTypeParameterBuilder[] gtpb)
+        {
+            foreach (var evt in interfaceType.GetEvents())
+            {
+                var sourceEvent = sourceType.GetEvent(evt.Name);
+                if (sourceEvent == null)
+                {
+                    throw new InvalidOperationException(
+                        String.Format("Cannot find interface event '{0}.{1}' in source type '{2}'",
+                        interfaceType, evt.Name, sourceType));
+                }
+
+                var eventBuilder = 
+                    tb.DefineEvent(
+                        interfaceType.Name + "." + evt.Name, 
+                        EventAttributes.None, evt.EventHandlerType);
+
+                // add method
+                var interfaceAddMethod = evt.GetAddMethod();
+                var sourceAddMethod = sourceEvent.GetAddMethod();
+                MethodBuilder addMthdBldr =
+                            tb.DefineMethod(interfaceType.FullName + ".add_" + evt.Name,
+                                MethodAttributes.Private |
+                                MethodAttributes.NewSlot |
+                                MethodAttributes.HideBySig |
+                                MethodAttributes.Virtual |
+                                MethodAttributes.Final,
+                              typeof(void), new[] { evt.EventHandlerType });
+
+                EnsureGenericParameters(interfaceAddMethod, addMthdBldr, interfaceType, gtpb);
+
+                addMthdBldr.DefineParameter(1, ParameterAttributes.None, "value");
+
+                ILGenerator addIl = addMthdBldr.GetILGenerator();
+
+                addIl.Emit(OpCodes.Nop);
+                addIl.Emit(OpCodes.Ldarg_0);
+                addIl.Emit(OpCodes.Ldfld, fieldBuilder);
+                addIl.Emit(OpCodes.Ldarg_1);
+                addIl.Emit(OpCodes.Callvirt, sourceAddMethod);
+                addIl.Emit(OpCodes.Nop);
+                addIl.Emit(OpCodes.Ret);
+
+                eventBuilder.SetAddOnMethod(addMthdBldr);
+                tb.DefineMethodOverride(addMthdBldr, interfaceAddMethod);
+
+
+
+                // remove method
+                var interfaceRemoveMethod = evt.GetRemoveMethod();
+                var sourceRemoveMethod = sourceEvent.GetRemoveMethod();
+
+                MethodBuilder removeMthdBldr =
+                            tb.DefineMethod(interfaceType.FullName + ".remove_" + evt.Name,
+                                MethodAttributes.Private |
+                                MethodAttributes.NewSlot |
+                                MethodAttributes.HideBySig |
+                                MethodAttributes.Virtual |
+                                MethodAttributes.Final,
+                              typeof(void), new[] { evt.EventHandlerType });
+
+                EnsureGenericParameters(interfaceRemoveMethod, removeMthdBldr, interfaceType, gtpb);
+
+                removeMthdBldr.DefineParameter(1, ParameterAttributes.None, "value");
+
+                ILGenerator removeIl = removeMthdBldr.GetILGenerator();
+
+                removeIl.Emit(OpCodes.Nop);
+                removeIl.Emit(OpCodes.Ldarg_0);
+                removeIl.Emit(OpCodes.Ldfld, fieldBuilder);
+                removeIl.Emit(OpCodes.Ldarg_1);
+                removeIl.Emit(OpCodes.Callvirt, sourceRemoveMethod);
+                removeIl.Emit(OpCodes.Nop);
+                removeIl.Emit(OpCodes.Ret);
+
+                eventBuilder.SetRemoveOnMethod(removeMthdBldr);
+
+
+                tb.DefineMethodOverride(removeMthdBldr, interfaceRemoveMethod);
+            }
         }
 
         private void CreateProperties(Type interfaceType, Type sourceType, TypeBuilder tb, FieldBuilder fieldBuilder, GenericTypeParameterBuilder[] gtpb)
@@ -157,7 +239,7 @@ ab.Save("Temp" + typeName + ".dll");
                         var propParsArray = setPars.ToArray();
 
                         MethodBuilder setPropMthdBldr =
-                            tb.DefineMethod(interfaceType.Name + ".set_" + prop.Name,
+                            tb.DefineMethod(interfaceType.FullName + ".set_" + prop.Name,
                                 MethodAttributes.Private |
                                 MethodAttributes.SpecialName |
                                 MethodAttributes.NewSlot |
@@ -178,6 +260,8 @@ ab.Save("Temp" + typeName + ".dll");
                                 String.Format("Cannot find set property '{0}.{1}' in source type '{2}'",
                                 interfaceType, prop.Name, sourceType));
                         }
+
+                        EnsureGenericParameters(accessor, setPropMthdBldr, interfaceType, gtpb);
 
                         for (var i = 1; i <= propParsArray.Length; ++i)
                         {
@@ -213,7 +297,7 @@ ab.Save("Temp" + typeName + ".dll");
                         var getParsArray = getPars.ToArray();
 
                         MethodBuilder getPropMthdBldr =
-                            tb.DefineMethod(interfaceType.Name + ".get_" + prop.Name,
+                            tb.DefineMethod(interfaceType.FullName + ".get_" + prop.Name,
                                 MethodAttributes.Private |
                                 MethodAttributes.SpecialName |
                                 MethodAttributes.NewSlot |
@@ -231,6 +315,8 @@ ab.Save("Temp" + typeName + ".dll");
                                 String.Format("Cannot find get property '{0}.{1}' in source type '{2}'",
                                 interfaceType, prop.Name, sourceType));
                         }
+
+                        EnsureGenericParameters(accessor, getPropMthdBldr, interfaceType, gtpb);
 
 
                         for (var i = 1; i <= getParsArray.Length; ++i)
@@ -323,7 +409,7 @@ ab.Save("Temp" + typeName + ".dll");
 
 
                 var currMethod =
-                    tb.DefineMethod(interfaceType.Name + "." + method.Name,
+                    tb.DefineMethod(interfaceType.FullName + "." + method.Name,
                                     MethodAttributes.Private |
                                     MethodAttributes.HideBySig |
                                     MethodAttributes.NewSlot |
@@ -383,7 +469,10 @@ ab.Save("Temp" + typeName + ".dll");
             {
                 var genericArgsList = method.GetGenericArguments().ToList();
 
-                var methodGenerics = currMethod.DefineGenericParameters(genericArgsList.Select(g => g.Name).ToArray()).ToList();
+                var methodGenerics = 
+                    genericArgsList.Count == 0 
+                        ? new List<GenericTypeParameterBuilder>()
+                        : currMethod.DefineGenericParameters(genericArgsList.Select(g => g.Name).ToArray()).ToList();
 
                 if (gtpb != null)
                 {
@@ -454,14 +543,18 @@ ab.Save("Temp" + typeName + ".dll");
 
         private static void CreateConstructor(Type sourceType, TypeBuilder tb, FieldBuilder fieldBuilder)
         {
-            Type[] constructorArgs = { sourceType };
             var constructorBuilder =
                 tb.DefineConstructor(MethodAttributes.Public |
                                      MethodAttributes.HideBySig |
                                      MethodAttributes.SpecialName |
                                      MethodAttributes.RTSpecialName,
                                      CallingConventions.HasThis,
-                                     constructorArgs);
+                                     new[]{ sourceType });
+
+
+            constructorBuilder.DefineParameter(1, ParameterAttributes.None, "source");
+
+
             ILGenerator constrIl = constructorBuilder.GetILGenerator();
             constrIl.Emit(OpCodes.Ldarg_0);
             var objectConstructor = typeof(object).GetConstructors().First();
