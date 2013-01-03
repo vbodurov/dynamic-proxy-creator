@@ -144,10 +144,49 @@ namespace com.bodurov.DynamicProxyTests
             Assert.That(test, Is.EqualTo(2));
         }
 
-//        [Test]
-//        public void CanProxyEventWithGenericArguments()
-//        {
-//
-//        }
+        [Test]
+        public void CanProxyEventWithGenericArguments()
+        {
+            var type = To.ProxyType(typeof(Obj09<>), typeof(IInt09<>));
+            type = type.MakeGenericType(typeof(TestEventArgs));
+
+            var obj = new Obj09<TestEventArgs>();
+            var proxy = (IInt09<TestEventArgs>)Activator.CreateInstance(type, obj);
+
+            var test = 0;
+
+            EventHandler<TestEventArgs> func = (o, e) => ++test;
+
+            proxy.DoSomething += func;
+
+            proxy.Invoke(TestEventArgs.Empty);
+            proxy.Invoke(TestEventArgs.Empty);
+
+            Assert.That(test, Is.EqualTo(2));
+
+            proxy.DoSomething -= func;
+
+            proxy.Invoke(TestEventArgs.Empty);
+            proxy.Invoke(TestEventArgs.Empty);
+            proxy.Invoke(TestEventArgs.Empty);
+
+            Assert.That(test, Is.EqualTo(2));
+
+        }
+
+        [Test]
+        public void CanCacheType()
+        {
+            var type = To.ProxyType<Obj01, IInt01>();
+
+            Type result;
+            var found = To.DefaultProxyCreator.TryFindTypeInCache(typeof (Obj01), typeof (IInt01), out result);
+
+            Assert.That(found);
+
+            var type2 = To.ProxyType<Obj01, IInt01>();
+
+            Assert.That(type , Is.EqualTo(type2));
+        }
     }
 }

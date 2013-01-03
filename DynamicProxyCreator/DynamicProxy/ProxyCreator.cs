@@ -10,7 +10,7 @@ namespace com.bodurov.DynamicProxy
     public class ProxyCreator : IProxyCreator
     {
         private readonly IProxyCreator _interface;
-        private readonly IDictionary<Type,IDictionary<Type,Type>> _cacheByInterfaceType = new Dictionary<Type, IDictionary<Type, Type>>(); 
+        private readonly IDictionary<Type,IDictionary<Type,Type>> _cacheBySourceType = new Dictionary<Type, IDictionary<Type, Type>>(); 
         private static int _counter = 100;
 
         public ProxyCreator()
@@ -20,10 +20,10 @@ namespace com.bodurov.DynamicProxy
 
         bool IProxyCreator.TryFindTypeInCache(Type sourceType, Type interfaceType, out Type cachedType)
         {
-            IDictionary<Type, Type> cacheBySourceType;
-            if (_cacheByInterfaceType.TryGetValue(interfaceType, out cacheBySourceType))
+            IDictionary<Type, Type> cacheByInterfaceType;
+            if (_cacheBySourceType.TryGetValue(sourceType, out cacheByInterfaceType))
             {
-                if (cacheBySourceType.TryGetValue(sourceType, out cachedType))
+                if (cacheByInterfaceType.TryGetValue(interfaceType, out cachedType))
                 {
                     return true;
                 }
@@ -91,15 +91,15 @@ namespace com.bodurov.DynamicProxy
 
             var type = tb.CreateType();
 
-// TODO: remove, it is here just for testing
-ab.Save("Temp" + typeName + ".dll");
+// TODO: uncomment to see generated assembly (also change 'AppDomain.CurrentDomain.DefineDynamicAssembly' ...)
+//ab.Save("Temp" + typeName + ".dll");
 
-            IDictionary<Type, Type> cacheBySourceType;
-            if (!_cacheByInterfaceType.TryGetValue(interfaceType, out cacheBySourceType))
+            IDictionary<Type, Type> cacheByInterfaceType;
+            if (!_cacheBySourceType.TryGetValue(sourceType, out cacheByInterfaceType))
             {
-                _cacheByInterfaceType[interfaceType] = new Dictionary<Type, Type>();
+                _cacheBySourceType[sourceType] = new Dictionary<Type, Type>();
             }
-            _cacheByInterfaceType[interfaceType][sourceType] = type;
+            _cacheBySourceType[sourceType][interfaceType] = type;
 
             return type;
         }
@@ -575,11 +575,11 @@ ab.Save("Temp" + typeName + ".dll");
                 Name = "Temp" + typeName + ".dll",
                 Version = new Version(1, 0, 0, 0)
             };
-// TODO: change to Run
+// TODO: uncomment to test assembly being geneate (also uncomment 'ab.Save("Temp" + typeName + ".dll")' )
             ab =
                 AppDomain.CurrentDomain.DefineDynamicAssembly(
-                //        an, AssemblyBuilderAccess.Run);
-                  an, AssemblyBuilderAccess.RunAndSave);//change to test saving assembly
+                        an, AssemblyBuilderAccess.Run);
+                  //an, AssemblyBuilderAccess.RunAndSave);//change to test saving assembly
 
             var moduleBuilder = ab.DefineDynamicModule(an.Name);
 
