@@ -8,8 +8,18 @@ namespace com.bodurov.DynamicProxyTests
     [TestFixture]
     public class ProxyCreatorTests
     {
+
         [Test]
         public void CanProxySimpleMethods()
+        {
+            var proxy = To.Proxy<IInt01>(new Obj01());
+
+            proxy.Method01();
+            proxy.Method02("a", 1, 12.12, true, null, null);
+        }
+
+        [Test]
+        public void CanProxySimpleMethodsUsingProxyType()
         {
             var type = To.ProxyType<Obj01, IInt01>();
 
@@ -23,11 +33,7 @@ namespace com.bodurov.DynamicProxyTests
         [Test]
         public void CanProxyClassAndMethodGenerics()
         {
-            var type = To.ProxyType(typeof(Obj02<,>), typeof(IInt02<,>));
-            type = type.MakeGenericType(new[] { typeof(double), typeof(string) });
-
-            var a = new Obj02<double, string>();
-            var proxy = (IInt02<double, string>)Activator.CreateInstance(type, a);
+            var proxy = To.Proxy<IInt02<double,string>>(new Obj02<double, string>());
 
 
             proxy.Method01("str1", 20);
@@ -36,10 +42,7 @@ namespace com.bodurov.DynamicProxyTests
         [Test]
         public void CanProxyMethodGenerics()
         {
-            var type = To.ProxyType<Obj03, IInt03>();
-
-            var a = new Obj03();
-            var proxy = (IInt03)Activator.CreateInstance(type, a);
+            var proxy = To.Proxy<IInt03>(new Obj03());
             const string testString = "abc";
 
             var result = proxy.Method03(1, 2, 3.0, true, null, testString);
@@ -50,10 +53,9 @@ namespace com.bodurov.DynamicProxyTests
         [Test]
         public void CanProxyProperties()
         {
-            var type = To.ProxyType<Obj04, IInt04>();
+            var proxy = To.Proxy<IInt04>(new Obj04());
 
-            var a = new Obj04();
-            var proxy = (IInt04)Activator.CreateInstance(type, a);
+
             const int testInt = 123;
             const string testString = "abc";
 
@@ -67,13 +69,10 @@ namespace com.bodurov.DynamicProxyTests
         [Test]
         public void CanProxyPropertiesWithGenerics()
         {
-            var type = To.ProxyType(typeof(Obj05<,>), typeof(IInt05<,>));
-            type = type.MakeGenericType(new[] { typeof(double), typeof(string) });
             const double testDouble = 123.8;
             const string testString = "abc";
 
-            var a = new Obj05<double, string>();
-            var proxy = (IInt05<double, string>)Activator.CreateInstance(type, a);
+            var proxy = To.Proxy<IInt05<double,string>>(new Obj05<double, string>());
 
             proxy.ReadWriteProp = testDouble;
             proxy.ReadWriteProp2 = testString;
@@ -86,11 +85,7 @@ namespace com.bodurov.DynamicProxyTests
         public void CanProxyIndexersWithGenerics()
         {
             var guid = Guid.NewGuid();
-            var type = To.ProxyType(typeof(Obj06<>), typeof(IInt06<>));
-            type = type.MakeGenericType(new[] { typeof(Guid) });
-
-            var a = new Obj06<Guid>();
-            var proxy = (IInt06<Guid>)Activator.CreateInstance(type, a);
+            var proxy = To.Proxy<IInt06<Guid>>(new Obj06<Guid>());
 
             proxy[2.1, Guid.Empty, true, 18.8f, "hey"] = Guid.Empty;
 
@@ -99,13 +94,11 @@ namespace com.bodurov.DynamicProxyTests
             Assert.That(proxy[guid], Is.EqualTo(guid.ToString()));
         }
 
+
         [Test]
         public void CanProxyMethodsWithRefAndOut()
         {
-            var type = To.ProxyType<Obj07, IInt07>();
-
-            var obj = new Obj07();
-            var proxy = (IInt07)Activator.CreateInstance(type, obj);
+            var proxy = To.Proxy<IInt07>(new Obj07());
 
             var r = 6;
             double half;
@@ -119,10 +112,7 @@ namespace com.bodurov.DynamicProxyTests
         [Test]
         public void CanProxyEvents()
         {
-            var type = To.ProxyType<Obj08, IInt08>();
-
-            var obj = new Obj08();
-            var proxy = (IInt08)Activator.CreateInstance(type, obj);
+            var proxy = To.Proxy<IInt08>(new Obj08());
 
             var test = 0;
 
@@ -146,6 +136,32 @@ namespace com.bodurov.DynamicProxyTests
 
         [Test]
         public void CanProxyEventWithGenericArguments()
+        {
+            var proxy = To.Proxy<IInt09<TestEventArgs>>(new Obj09<TestEventArgs>());
+
+            var test = 0;
+
+            EventHandler<TestEventArgs> func = (o, e) => ++test;
+
+            proxy.DoSomething += func;
+
+            proxy.Invoke(TestEventArgs.Empty);
+            proxy.Invoke(TestEventArgs.Empty);
+
+            Assert.That(test, Is.EqualTo(2));
+
+            proxy.DoSomething -= func;
+
+            proxy.Invoke(TestEventArgs.Empty);
+            proxy.Invoke(TestEventArgs.Empty);
+            proxy.Invoke(TestEventArgs.Empty);
+
+            Assert.That(test, Is.EqualTo(2));
+
+        }
+
+        [Test]
+        public void CanProxyEventWithGenericArgumentsUsingProxyType()
         {
             var type = To.ProxyType(typeof(Obj09<>), typeof(IInt09<>));
             type = type.MakeGenericType(typeof(TestEventArgs));
@@ -187,6 +203,25 @@ namespace com.bodurov.DynamicProxyTests
             var type2 = To.ProxyType<Obj01, IInt01>();
 
             Assert.That(type , Is.EqualTo(type2));
+        }
+
+
+        [Test]
+        public void CanProxyNonGenericType()
+        {
+            var obj = To.Proxy<IInt01>(new Obj01());
+
+            Assert.That(obj, Is.Not.Null);
+            Assert.That(obj.ToString(), Is.StringContaining("ProxyForObj01"));
+        }
+
+        [Test]
+        public void CanProxyGenericType()
+        {
+            var obj = To.Proxy<IInt05<int, string>>(new Obj05<int, string>());
+
+            Assert.That(obj, Is.Not.Null);
+            Assert.That(obj.ToString(), Is.StringContaining("ProxyForObj05"));
         }
     }
 }
